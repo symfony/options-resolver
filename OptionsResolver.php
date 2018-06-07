@@ -977,7 +977,7 @@ class OptionsResolver implements Options
      *
      * @param mixed $value The value to return the type of
      */
-    private function formatTypeOf($value, ?string $type): string
+    private function formatTypeOf($value, $type): string
     {
         $suffix = '';
 
