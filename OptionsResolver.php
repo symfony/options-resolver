@@ -858,21 +858,31 @@ class OptionsResolver implements Options
             $success = false;
             $printableAllowedValues = array();
 
-            foreach ($this->allowedValues[$option] as $allowedValue) {
-                if ($allowedValue instanceof \Closure) {
-                    if ($allowedValue($value)) {
+            // verify if its callback
+            if (
+                2 == count($this->allowedValues[$option]) &&
+                is_callable([$this->allowedValues[$option][0], $this->allowedValues[$option][1]])
+            ) {
+                if (call_user_func_array([$this->allowedValues[$option][0], $this->allowedValues[$option][1]], [$value])) {
+                    $success = true;
+                }
+            } else {
+                foreach ($this->allowedValues[$option] as $allowedValue) {
+                    if ($allowedValue instanceof \Closure) {
+                        if ($allowedValue($value)) {
+                            $success = true;
+                            break;
+                        }
+                        // Don't include closures in the exception message
+                        continue;
+
+                    } elseif ($value === $allowedValue) {
                         $success = true;
                         break;
                     }
 
-                    // Don't include closures in the exception message
-                    continue;
-                } elseif ($value === $allowedValue) {
-                    $success = true;
-                    break;
+                    $printableAllowedValues[] = $allowedValue;
                 }
-
-                $printableAllowedValues[] = $allowedValue;
             }
 
             if (!$success) {
