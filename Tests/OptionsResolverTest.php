@@ -1914,4 +1914,42 @@ class OptionsResolverTest extends TestCase
             ),
         ));
     }
+
+
+    /**
+     * @expectedException \Symfony\Component\OptionsResolver\Exception\InvalidOptionsException
+     */
+    public function testResolveFailsIfAddedCallbackReturnFalse()
+    {
+        $stub = new \stdClass();
+        $stub->test = function($value){
+            return false;
+        };
+
+        $options = [
+            'foo'=>'bar'
+        ];
+
+        $this->resolver->setDefault('foo', 42);
+        $this->resolver->setAllowedValues('foo', [$stub, 'test']);
+
+        $this->resolver->resolve($options);
+    }
+
+    public function testResolveSucceedsIfCallbackReturnsTrue()
+    {
+        $stub = $this->createMock(\stdClass::class);
+        $stub->method('test')
+            ->willReturn(true);
+
+        $options = [
+            'foo'=>'bar'
+        ];
+
+        $this->resolver->setDefault('foo', 42);
+        $this->resolver->setAllowedValues('foo', [$stub, 'test']);
+
+        $this->assertEquals(array('foo' => 'bar'), $this->resolver->resolve($options));
+    }
+
 }
