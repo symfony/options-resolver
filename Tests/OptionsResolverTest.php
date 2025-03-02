@@ -1585,7 +1585,7 @@ class OptionsResolverTest extends TestCase
             Assert::fail('Should not be called.');
         });
 
-        $this->assertEmpty($this->resolver->resolve());
+        $this->assertSame([], $this->resolver->resolve());
     }
 
     public function testAddNormalizerReturnsThis()
@@ -1768,7 +1768,7 @@ class OptionsResolverTest extends TestCase
 
         $this->resolver->clear();
 
-        $this->assertEmpty($this->resolver->resolve());
+        $this->assertSame([], $this->resolver->resolve());
     }
 
     public function testClearLazyOption()
@@ -1829,7 +1829,7 @@ class OptionsResolverTest extends TestCase
         $this->resolver->setNormalizer('foo2', fn (Options $options) => '');
 
         $this->resolver->clear();
-        $this->assertEmpty($this->resolver->resolve());
+        $this->assertSame([], $this->resolver->resolve());
     }
 
     public function testArrayAccess()
