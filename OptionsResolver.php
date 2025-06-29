@@ -65,13 +65,6 @@ class OptionsResolver implements Options
     private array $nested = [];
 
     /**
-     * BC layer. Remove in Symfony 8.0.
-     *
-     * @var array<string, true>
-     */
-    private array $deprecatedNestedOptions = [];
-
-    /**
      * The names of required options.
      */
     private array $required = [];
@@ -222,22 +215,12 @@ class OptionsResolver implements Options
                 // Make sure the option is processed
                 unset($this->resolved[$option]);
 
-                // BC layer. Remove in Symfony 8.0.
-                if (isset($this->deprecatedNestedOptions[$option])) {
-                    unset($this->nested[$option]);
-                }
-
                 return $this;
             }
         }
 
         // This option is not lazy anymore
         unset($this->lazy[$option]);
-
-        // BC layer. Remove in Symfony 8.0.
-        if (isset($this->deprecatedNestedOptions[$option])) {
-            unset($this->nested[$option]);
-        }
 
         // Yet undefined options can be marked as resolved, because we only need
         // to resolve options with lazy closures, normalizers or validation
