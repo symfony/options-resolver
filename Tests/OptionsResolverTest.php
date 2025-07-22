@@ -13,7 +13,6 @@ namespace Symfony\Component\OptionsResolver\Tests;
 
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
-use Symfony\Bridge\PhpUnit\ExpectUserDeprecationMessageTrait;
 use Symfony\Component\OptionsResolver\Debug\OptionsResolverIntrospector;
 use Symfony\Component\OptionsResolver\Exception\AccessException;
 use Symfony\Component\OptionsResolver\Exception\InvalidArgumentException;
@@ -27,8 +26,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class OptionsResolverTest extends TestCase
 {
-    use ExpectUserDeprecationMessageTrait;
-
     private OptionsResolver $resolver;
 
     protected function setUp(): void
@@ -1405,7 +1402,6 @@ class OptionsResolverTest extends TestCase
         $this->resolver->setDefault('norm', 'baz');
 
         $this->resolver->setNormalizer('norm', function (Options $options) {
-            /** @var TestCase $test */
             Assert::assertSame('bar', $options['default']);
 
             return 'normalized';
@@ -1423,7 +1419,6 @@ class OptionsResolverTest extends TestCase
         $this->resolver->setDefault('norm', 'baz');
 
         $this->resolver->setNormalizer('norm', function (Options $options) {
-            /** @var TestCase $test */
             Assert::assertEquals('bar', $options['lazy']);
 
             return 'normalized';
