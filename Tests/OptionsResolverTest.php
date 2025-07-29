@@ -2044,6 +2044,145 @@ class OptionsResolverTest extends TestCase
         ]);
     }
 
+    /**
+     * @dataProvider provideValidDeeplyNestedUnionTypes
+     */
+    public function testDeeplyNestedUnionTypes(string $type, $validValue)
+    {
+        $this->resolver->setDefined('option');
+        $this->resolver->setAllowedTypes('option', $type);
+        $this->assertEquals(['option' => $validValue], $this->resolver->resolve(['option' => $validValue]));
+    }
+
+    /**
+     * @dataProvider provideInvalidDeeplyNestedUnionTypes
+     */
+    public function testDeeplyNestedUnionTypesException(string $type, $invalidValue, string $expectedExceptionMessage)
+    {
+        $this->resolver->setDefined('option');
+        $this->resolver->setAllowedTypes('option', $type);
+
+        $this->expectException(InvalidOptionsException::class);
+        $this->expectExceptionMessage($expectedExceptionMessage);
+
+        $this->resolver->resolve(['option' => $invalidValue]);
+    }
+
+    public function provideValidDeeplyNestedUnionTypes(): array
+    {
+        $resource = fopen('php://memory', 'r');
+        $object = new \stdClass();
+
+        return [
+            // Test 1 level of nesting
+            ['string|(int|bool)', 'test'],
+            ['string|(int|bool)', 42],
+            ['string|(int|bool)', true],
+
+            // Test 2 levels of nesting
+            ['string|(int|(bool|float))', 'test'],
+            ['string|(int|(bool|float))', 42],
+            ['string|(int|(bool|float))', true],
+            ['string|(int|(bool|float))', 3.14],
+
+            // Test 3 levels of nesting
+            ['string|(int|(bool|(float|null)))', 'test'],
+            ['string|(int|(bool|(float|null)))', 42],
+            ['string|(int|(bool|(float|null)))', true],
+            ['string|(int|(bool|(float|null)))', 3.14],
+            ['string|(int|(bool|(float|null)))', null],
+
+            // Test 4 levels of nesting
+            ['string|(int|(bool|(float|(null|object))))', 'test'],
+            ['string|(int|(bool|(float|(null|object))))', 42],
+            ['string|(int|(bool|(float|(null|object))))', true],
+            ['string|(int|(bool|(float|(null|object))))', 3.14],
+            ['string|(int|(bool|(float|(null|object))))', null],
+            ['string|(int|(bool|(float|(null|object))))', $object],
+
+            // Test complex case with multiple deep nesting
+            ['(string|(int|bool))|(float|(null|object))', 'test'],
+            ['(string|(int|bool))|(float|(null|object))', 42],
+            ['(string|(int|bool))|(float|(null|object))', true],
+            ['(string|(int|bool))|(float|(null|object))', 3.14],
+            ['(string|(int|bool))|(float|(null|object))', null],
+            ['(string|(int|bool))|(float|(null|object))', $object],
+
+            // Test nested at the beginning
+            ['((string|int)|bool)|float', 'test'],
+            ['((string|int)|bool)|float', 42],
+            ['((string|int)|bool)|float', true],
+            ['((string|int)|bool)|float', 3.14],
+
+            // Test multiple unions at different levels
+            ['string|(int|(bool|float))|null|(object|(array|resource))', 'test'],
+            ['string|(int|(bool|float))|null|(object|(array|resource))', 42],
+            ['string|(int|(bool|float))|null|(object|(array|resource))', true],
+            ['string|(int|(bool|float))|null|(object|(array|resource))', 3.14],
+            ['string|(int|(bool|float))|null|(object|(array|resource))', null],
+            ['string|(int|(bool|float))|null|(object|(array|resource))', $object],
+            ['string|(int|(bool|float))|null|(object|(array|resource))', []],
+            ['string|(int|(bool|float))|null|(object|(array|resource))', $resource],
+
+            // Test arrays with nested union types:
+            ['(string|int)[]|(bool|float)[]', ['test', 42]],
+            ['(string|int)[]|(bool|float)[]', [true, 3.14]],
+
+            // Test deeply nested arrays with unions
+            ['((string|int)|(bool|float))[]', ['test', 42, true, 3.14]],
+
+            // Test complex nested array types
+            ['(string|(int|bool)[])|(float|(null|object)[])', 'test'],
+            ['(string|(int|bool)[])|(float|(null|object)[])', [42, true]],
+            ['(string|(int|bool)[])|(float|(null|object)[])', 3.14],
+            ['(string|(int|bool)[])|(float|(null|object)[])', [null, $object]],
+
+            // Test multi-dimensional arrays with nesting
+            ['((string|int)[]|(bool|float)[])|null', ['test', 42]],
+            ['((string|int)[]|(bool|float)[])|null', [true, 3.14]],
+            ['((string|int)[]|(bool|float)[])|null', null],
+        ];
+    }
+
+    public function provideInvalidDeeplyNestedUnionTypes(): array
+    {
+        $resource = fopen('php://memory', 'r');
+        $object = new \stdClass();
+
+        return [
+            // Test 1 level of nesting
+            ['string|(int|bool)', [], 'The option "option" with value array is expected to be of type "string|(int|bool)", but is of type "array".'],
+            ['string|(int|bool)', $object, 'The option "option" with value stdClass is expected to be of type "string|(int|bool)", but is of type "stdClass".'],
+            ['string|(int|bool)', $resource, 'The option "option" with value resource is expected to be of type "string|(int|bool)", but is of type "resource (stream)".'],
+            ['string|(int|bool)', null, 'The option "option" with value null is expected to be of type "string|(int|bool)", but is of type "null".'],
+            ['string|(int|bool)', 3.14, 'The option "option" with value 3.14 is expected to be of type "string|(int|bool)", but is of type "float".'],
+
+            // Test 2 levels of nesting
+            ['string|(int|(bool|float))', [], 'The option "option" with value array is expected to be of type "string|(int|(bool|float))", but is of type "array".'],
+            ['string|(int|(bool|float))', $object, 'The option "option" with value stdClass is expected to be of type "string|(int|(bool|float))", but is of type "stdClass".'],
+            ['string|(int|(bool|float))', $resource, 'The option "option" with value resource is expected to be of type "string|(int|(bool|float))", but is of type "resource (stream)".'],
+            ['string|(int|(bool|float))', null, 'The option "option" with value null is expected to be of type "string|(int|(bool|float))", but is of type "null".'],
+
+            // Test 3 levels of nesting
+            ['string|(int|(bool|(float|null)))', [], 'The option "option" with value array is expected to be of type "string|(int|(bool|(float|null)))", but is of type "array".'],
+            ['string|(int|(bool|(float|null)))', $object, 'The option "option" with value stdClass is expected to be of type "string|(int|(bool|(float|null)))", but is of type "stdClass".'],
+            ['string|(int|(bool|(float|null)))', $resource, 'The option "option" with value resource is expected to be of type "string|(int|(bool|(float|null)))", but is of type "resource (stream)".'],
+
+            // Test arrays with nested union types
+            ['(string|int)[]|(bool|float)[]', ['test', true], 'The option "option" with value array is expected to be of type "(string|int)[]|(bool|float)[]", but one of the elements is of type "array".'],
+            ['(string|int)[]|(bool|float)[]', [42, 3.14], 'The option "option" with value array is expected to be of type "(string|int)[]|(bool|float)[]", but one of the elements is of type "array".'],
+
+            // Test deeply nested arrays with unions
+            ['((string|int)|(bool|float))[]', 'test', 'The option "option" with value "test" is expected to be of type "((string|int)|(bool|float))[]", but is of type "string".'],
+            ['((string|int)|(bool|float))[]', [null], 'The option "option" with value array is expected to be of type "((string|int)|(bool|float))[]", but one of the elements is of type "null".'],
+            ['((string|int)|(bool|float))[]', [$object], 'The option "option" with value array is expected to be of type "((string|int)|(bool|float))[]", but one of the elements is of type "stdClass".'],
+
+            // Test complex nested array types
+            ['(string|(int|bool)[])|(float|(null|object)[])', ['test'], 'The option "option" with value array is expected to be of type "(string|(int|bool)[])|(float|(null|object)[])", but is of type "array".'],
+            ['(string|(int|bool)[])|(float|(null|object)[])', [3.14], 'The option "option" with value array is expected to be of type "(string|(int|bool)[])|(float|(null|object)[])", but is of type "array".'],
+        ];
+    }
+
     public function testNestedArrayException1()
     {
         $this->expectException(InvalidOptionsException::class);
