@@ -1182,33 +1182,29 @@ class OptionsResolver implements Options
      */
     private function splitOutsideParenthesis(string $type): array
     {
-        $parts = [];
-        $currentPart = '';
-        $parenthesisLevel = 0;
+        return preg_split(<<<'EOF'
+                /
+                # Define a recursive subroutine for matching balanced parentheses
+                (?(DEFINE)
+                    (?<balanced>
+                        \(                          # Match an opening parenthesis
+                        (?:                         # Start a non-capturing group for the contents
+                            [^()]                   # Match any character that is not a parenthesis
+                            |                       # OR
+                            (?&balanced)            # Recursively match a nested balanced group
+                        )*                          # Repeat the group for all contents
+                        \)                          # Match the final closing parenthesis
+                    )
+                )
 
-        $typeLength = \strlen($type);
-        for ($i = 0; $i < $typeLength; ++$i) {
-            $char = $type[$i];
+                # Match any balanced parenthetical group, then skip it
+                (?&balanced)(*SKIP)(*FAIL)          # Use the defined subroutine and discard the match
 
-            if ('(' === $char) {
-                ++$parenthesisLevel;
-            } elseif (')' === $char) {
-                --$parenthesisLevel;
-            }
+                | # OR
 
-            if ('|' === $char && 0 === $parenthesisLevel) {
-                $parts[] = $currentPart;
-                $currentPart = '';
-            } else {
-                $currentPart .= $char;
-            }
-        }
-
-        if ('' !== $currentPart) {
-            $parts[] = $currentPart;
-        }
-
-        return $parts;
+                \|                                  # Match the pipe delimiter (only if not inside a skipped group)
+                /x
+        EOF, $type);
     }
 
     /**
