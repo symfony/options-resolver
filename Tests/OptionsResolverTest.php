@@ -2068,7 +2068,7 @@ class OptionsResolverTest extends TestCase
         $this->resolver->resolve(['option' => $invalidValue]);
     }
 
-    public function provideValidDeeplyNestedUnionTypes(): array
+    public static function provideValidDeeplyNestedUnionTypes(): array
     {
         $resource = fopen('php://memory', 'r');
         $object = new \stdClass();
@@ -2144,7 +2144,7 @@ class OptionsResolverTest extends TestCase
         ];
     }
 
-    public function provideInvalidDeeplyNestedUnionTypes(): array
+    public static function provideInvalidDeeplyNestedUnionTypes(): array
     {
         $resource = fopen('php://memory', 'r');
         $object = new \stdClass();
