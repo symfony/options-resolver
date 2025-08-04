@@ -12,6 +12,7 @@
 namespace Symfony\Component\OptionsResolver\Tests;
 
 use PHPUnit\Framework\Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\OptionsResolver\Debug\OptionsResolverIntrospector;
 use Symfony\Component\OptionsResolver\Exception\AccessException;
@@ -33,9 +34,7 @@ class OptionsResolverTest extends TestCase
         $this->resolver = new OptionsResolver();
     }
 
-    /**
-     * @dataProvider provideResolveWithIgnoreUndefined
-     */
+    #[DataProvider('provideResolveWithIgnoreUndefined')]
     public function testResolveWithIgnoreUndefined(array $defaults, array $options, array $expected)
     {
         $this->resolver
@@ -541,9 +540,7 @@ class OptionsResolverTest extends TestCase
         $this->assertFalse($this->resolver->isDeprecated('foo'));
     }
 
-    /**
-     * @dataProvider provideDeprecationData
-     */
+    #[DataProvider('provideDeprecationData')]
     public function testDeprecationMessages(\Closure $configureOptions, array $options, ?array $expectedError, int $expectedCount)
     {
         $count = 0;
@@ -907,9 +904,7 @@ class OptionsResolverTest extends TestCase
         ]);
     }
 
-    /**
-     * @dataProvider provideInvalidTypes
-     */
+    #[DataProvider('provideInvalidTypes')]
     public function testResolveFailsIfInvalidType($actualType, $allowedType, $exceptionMessage)
     {
         $this->resolver->setDefined('option');
@@ -2001,9 +1996,7 @@ class OptionsResolverTest extends TestCase
         ]);
     }
 
-    /**
-     * @dataProvider provideValidDeeplyNestedUnionTypes
-     */
+    #[DataProvider('provideValidDeeplyNestedUnionTypes')]
     public function testDeeplyNestedUnionTypes(string $type, $validValue)
     {
         $this->resolver->setDefined('option');
@@ -2011,9 +2004,7 @@ class OptionsResolverTest extends TestCase
         $this->assertEquals(['option' => $validValue], $this->resolver->resolve(['option' => $validValue]));
     }
 
-    /**
-     * @dataProvider provideInvalidDeeplyNestedUnionTypes
-     */
+    #[DataProvider('provideInvalidDeeplyNestedUnionTypes')]
     public function testDeeplyNestedUnionTypesException(string $type, $invalidValue, string $expectedExceptionMessage)
     {
         $this->resolver->setDefined('option');
