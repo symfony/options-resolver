@@ -1452,7 +1452,7 @@ class OptionsResolverTest extends TestCase
         $this->resolver->setDefault('norm', 'baz');
 
         $this->resolver->setNormalizer('norm', function (Options $options) {
-            Assert::assertEquals('bar', $options['lazy']);
+            Assert::assertSame('bar', $options['lazy']);
 
             return 'normalized';
         });
@@ -2746,9 +2746,9 @@ class OptionsResolverTest extends TestCase
         ;
         $introspector = new OptionsResolverIntrospector($this->resolver);
 
-        $this->assertTrue(true, $this->resolver->isDefined('foo'));
-        $this->assertTrue(true, $this->resolver->isDeprecated('foo'));
-        $this->assertTrue(true, $this->resolver->hasDefault('foo'));
+        $this->assertTrue($this->resolver->isDefined('foo'));
+        $this->assertTrue($this->resolver->isDeprecated('foo'));
+        $this->assertTrue($this->resolver->hasDefault('foo'));
         $this->assertSame('bar', $introspector->getDefault('foo'));
         $this->assertSame(['string', 'bool'], $introspector->getAllowedTypes('foo'));
         $this->assertSame(['bar', 'zab'], $introspector->getAllowedValues('foo'));
