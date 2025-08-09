@@ -1216,28 +1216,28 @@ class OptionsResolver implements Options
     private function splitOutsideParenthesis(string $type): array
     {
         return preg_split(<<<'EOF'
-                /
-                # Define a recursive subroutine for matching balanced parentheses
-                (?(DEFINE)
-                    (?<balanced>
-                        \(                          # Match an opening parenthesis
-                        (?:                         # Start a non-capturing group for the contents
-                            [^()]                   # Match any character that is not a parenthesis
-                            |                       # OR
-                            (?&balanced)            # Recursively match a nested balanced group
-                        )*                          # Repeat the group for all contents
-                        \)                          # Match the final closing parenthesis
+                    /
+                    # Define a recursive subroutine for matching balanced parentheses
+                    (?(DEFINE)
+                        (?<balanced>
+                            \(                          # Match an opening parenthesis
+                            (?:                         # Start a non-capturing group for the contents
+                                [^()]                   # Match any character that is not a parenthesis
+                                |                       # OR
+                                (?&balanced)            # Recursively match a nested balanced group
+                            )*                          # Repeat the group for all contents
+                            \)                          # Match the final closing parenthesis
+                        )
                     )
-                )
 
-                # Match any balanced parenthetical group, then skip it
-                (?&balanced)(*SKIP)(*FAIL)          # Use the defined subroutine and discard the match
+                    # Match any balanced parenthetical group, then skip it
+                    (?&balanced)(*SKIP)(*FAIL)          # Use the defined subroutine and discard the match
 
-                | # OR
+                    | # OR
 
-                \|                                  # Match the pipe delimiter (only if not inside a skipped group)
-                /x
-        EOF, $type);
+                    \|                                  # Match the pipe delimiter (only if not inside a skipped group)
+                    /x
+            EOF, $type);
     }
 
     /**
