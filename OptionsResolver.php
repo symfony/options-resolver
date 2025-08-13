@@ -1204,7 +1204,9 @@ class OptionsResolver implements Options
 
                     \|                                  # Match the pipe delimiter (only if not inside a skipped group)
                     /x
-            EOF, $type);
+            EOF,
+            $type
+        );
     }
 
     /**
