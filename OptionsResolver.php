@@ -964,6 +964,11 @@ class OptionsResolver implements Options
                 $resolver = new self();
                 $resolver->prototype = false;
                 $resolver->parentsOptions = $this->parentsOptions;
+
+                if ($this->prototype && null !== $this->prototypeIndex && null !== ($parentOptionKey = array_key_last($resolver->parentsOptions))) {
+                    $resolver->parentsOptions[$parentOptionKey] .= \sprintf('[%s]', $this->prototypeIndex);
+                }
+
                 $resolver->parentsOptions[] = $option;
                 foreach ($this->nested[$option] as $closure) {
                     $closure($resolver, $this);

@@ -2595,4 +2595,46 @@ class OptionsResolverTest extends TestCase
             restore_error_handler();
         }
     }
+
+    public function testNestedPrototypeErrorPathHasFullContext()
+    {
+        $resolver = new OptionsResolver();
+
+        $resolver->setDefault('connections', static function (OptionsResolver $connResolver) {
+            $connResolver->setPrototype(true);
+            $connResolver->setRequired(['host', 'database']);
+            $connResolver->setDefault('user', 'root');
+
+            $connResolver->setDefault('replicas', static function (OptionsResolver $replicaResolver) {
+                $replicaResolver->setPrototype(true);
+                $replicaResolver->setRequired(['host']);
+                $replicaResolver->setDefault('user', 'read_only');
+            });
+        });
+
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "connections[main_db][replicas][1][host]" is missing.');
+
+        $options = [
+            'connections' => [
+                'main_db' => [
+                    'host' => 'localhost',
+                    'database' => 'app_db',
+                    'replicas' => [
+                        ['host' => 'replica-01.local', 'user' => 'read_only'],
+                        ['user' => 'other_user'], // Index 1 -> "host" is missing here
+                    ],
+                ],
+                'audit_db' => [
+                    'host' => 'audit.local',
+                    'database' => 'audit_db',
+                    'replicas' => [
+                        ['host' => 'audit-replica.local'],
+                    ],
+                ],
+            ],
+        ];
+
+        $resolver->resolve($options);
+    }
 }
