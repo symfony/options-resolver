@@ -2566,4 +2566,33 @@ class OptionsResolverTest extends TestCase
 
         $this->assertSame($expectedOptions, $actualOptions);
     }
+
+    public function testRemoveAlsoRemovesDeprecation()
+    {
+        $this->resolver->setDefined('foo');
+        $this->resolver->setDeprecated('foo', 'vendor/package', '1.0');
+        $this->assertTrue($this->resolver->isDeprecated('foo'));
+
+        $this->resolver->remove('foo');
+        $this->assertFalse($this->resolver->isDeprecated('foo'));
+
+        $this->resolver->setDefault('foo', 'bar');
+        $this->assertFalse($this->resolver->isDeprecated('foo'));
+
+        $count = 0;
+        set_error_handler(static function (int $type) use (&$count) {
+            if (\E_USER_DEPRECATED === $type) {
+                ++$count;
+            }
+
+            return false;
+        });
+
+        try {
+            $this->resolver->resolve(['foo' => 'value']);
+            $this->assertSame(0, $count);
+        } finally {
+            restore_error_handler();
+        }
+    }
 }
