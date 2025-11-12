@@ -801,7 +801,7 @@ class OptionsResolver implements Options
 
         foreach ((array) $optionNames as $option) {
             unset($this->defined[$option], $this->defaults[$option], $this->required[$option], $this->resolved[$option]);
-            unset($this->lazy[$option], $this->normalizers[$option], $this->allowedTypes[$option], $this->allowedValues[$option], $this->info[$option]);
+            unset($this->lazy[$option], $this->normalizers[$option], $this->allowedTypes[$option], $this->allowedValues[$option], $this->info[$option], $this->deprecated[$option]);
         }
 
         return $this;
@@ -978,6 +978,11 @@ class OptionsResolver implements Options
                 $resolver = new self();
                 $resolver->prototype = false;
                 $resolver->parentsOptions = $this->parentsOptions;
+
+                if ($this->prototype && null !== $this->prototypeIndex && null !== ($parentOptionKey = array_key_last($resolver->parentsOptions))) {
+                    $resolver->parentsOptions[$parentOptionKey] .= \sprintf('[%s]', $this->prototypeIndex);
+                }
+
                 $resolver->parentsOptions[] = $option;
                 foreach ($this->nested[$option] as $closure) {
                     $closure($resolver, $this);
