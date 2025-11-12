@@ -3322,4 +3322,78 @@ class OptionsResolverTest extends TestCase
 
         $this->assertSame($expectedOptions, $actualOptions);
     }
+
+    public function testRemoveAlsoRemovesDeprecation()
+    {
+        $this->resolver->setDefined('foo');
+        $this->resolver->setDeprecated('foo', 'vendor/package', '1.0');
+        $this->assertTrue($this->resolver->isDeprecated('foo'));
+
+        $this->resolver->remove('foo');
+        $this->assertFalse($this->resolver->isDeprecated('foo'));
+
+        $this->resolver->setDefault('foo', 'bar');
+        $this->assertFalse($this->resolver->isDeprecated('foo'));
+
+        $count = 0;
+        set_error_handler(static function (int $type) use (&$count) {
+            if (\E_USER_DEPRECATED === $type) {
+                ++$count;
+            }
+
+            return false;
+        });
+
+        try {
+            $this->resolver->resolve(['foo' => 'value']);
+            $this->assertSame(0, $count);
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    /**
+     * @group legacy
+     */
+    public function testNestedPrototypeErrorPathHasFullContext()
+    {
+        $resolver = new OptionsResolver();
+
+        $resolver->setDefault('connections', static function (OptionsResolver $connResolver) {
+            $connResolver->setPrototype(true);
+            $connResolver->setRequired(['host', 'database']);
+            $connResolver->setDefault('user', 'root');
+
+            $connResolver->setDefault('replicas', static function (OptionsResolver $replicaResolver) {
+                $replicaResolver->setPrototype(true);
+                $replicaResolver->setRequired(['host']);
+                $replicaResolver->setDefault('user', 'read_only');
+            });
+        });
+
+        $this->expectException(MissingOptionsException::class);
+        $this->expectExceptionMessage('The required option "connections[main_db][replicas][1][host]" is missing.');
+
+        $options = [
+            'connections' => [
+                'main_db' => [
+                    'host' => 'localhost',
+                    'database' => 'app_db',
+                    'replicas' => [
+                        ['host' => 'replica-01.local', 'user' => 'read_only'],
+                        ['user' => 'other_user'], // Index 1 -> "host" is missing here
+                    ],
+                ],
+                'audit_db' => [
+                    'host' => 'audit.local',
+                    'database' => 'audit_db',
+                    'replicas' => [
+                        ['host' => 'audit-replica.local'],
+                    ],
+                ],
+            ],
+        ];
+
+        $resolver->resolve($options);
+    }
 }
