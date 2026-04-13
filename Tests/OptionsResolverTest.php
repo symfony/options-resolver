@@ -2584,9 +2584,7 @@ class OptionsResolverTest extends TestCase
     public function testResolveLazyOptionUsingNestedOption()
     {
         $this->resolver
-            ->setDefault('version', static function (Options $options) {
-                return $options['database']['server_version'];
-            })
+            ->setDefault('version', static fn (Options $options) => $options['database']['server_version'])
             ->setOptions('database', static function (OptionsResolver $resolver) {
                 $resolver->setDefault('server_version', '3.15');
             });
@@ -2689,9 +2687,7 @@ class OptionsResolverTest extends TestCase
             $resolver->define('bar')->allowedTypes('int');
         });
         // defined by subclass
-        $this->resolver->setDefault('foo', static function (Options $options) {
-            return ['bar' => 'invalid'];
-        });
+        $this->resolver->setDefault('foo', static fn (Options $options) => ['bar' => 'invalid']);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The option "foo[bar]" with value "invalid" is expected to be of type "int", but is of type "string".');
@@ -2729,9 +2725,7 @@ class OptionsResolverTest extends TestCase
     public function testFailsIfCyclicDependencyBetweenNestedOptionAndParentLazyOption()
     {
         $this->resolver
-            ->setDefault('version', static function (Options $options) {
-                return $options['database']['server_version'];
-            })
+            ->setDefault('version', static fn (Options $options) => $options['database']['server_version'])
             ->setOptions('database', static function (OptionsResolver $resolver, Options $parent) {
                 $resolver->setDefault('server_version', $parent['version']);
             });
@@ -2787,9 +2781,7 @@ class OptionsResolverTest extends TestCase
         $this->resolver
             ->setDefaults([
                 'ip' => null,
-                'secondary_replica' => static function (Options $options) {
-                    return $options['database']['primary_replica']['host'];
-                },
+                'secondary_replica' => static fn (Options $options) => $options['database']['primary_replica']['host'],
             ])
             ->setOptions('database', static function (OptionsResolver $resolver, Options $parent) {
                 $resolver
